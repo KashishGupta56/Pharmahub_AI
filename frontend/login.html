@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - PharmaCare</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .auth-container { background: white; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; padding: 40px; animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header i { font-size: 60px; color: #667eea; margin-bottom: 15px; }
+        .auth-header h2 { color: #333; font-size: 28px; }
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 30px; background: #f0f2f5; padding: 5px; border-radius: 50px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.3s; color: #666; }
+        .tab-btn.active { background: white; color: #667eea; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
+        .input-group { position: relative; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #667eea; }
+        .input-group input { width: 100%; padding: 14px 14px 14px 45px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; }
+        .btn-auth { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-bottom: 10px;}
+        .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+        .message-box { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; font-size: 14px; }
+        .message-box.show { display: block; }
+        .message-box.success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .message-box.error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .message-box.info { background: #cce5ff; color: #004085; border-left: 4px solid #007bff; }
+        
+        /* OTP Section styling */
+        #otpSection { display: none; animation: fadeIn 0.5s ease; padding-top: 15px; border-top: 1px dashed #ccc;}
+        #otpSection.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <i class="fas fa-prescription-bottle-alt"></i>
+            <h2>PharmaCare</h2>
+            <p>Pharmacy Management System</p>
+        </div>
+        
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Login</button>
+            <button class="tab-btn" id="signupTab" onclick="switchTab('signup')">Sign Up</button>
+            <button class="tab-btn" id="forgotTab" onclick="switchTab('forgot')">Forgot Pass</button>
+        </div>
+        
+        <div class="auth-form active" id="loginForm">
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" placeholder="Enter username" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Enter password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-auth" id="loginBtn">Login</button>
+            </form>
+        </div>
+
+        <div class="auth-form" id="signupForm">
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <div class="input-group"><i class="fas fa-id-card"></i><input type="text" id="signupFullName" placeholder="Full Name" required></div>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <div class="input-group"><i class="fas fa-at"></i><input type="text" id="signupUsername" placeholder="Username" required></div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="signupEmail" placeholder="Email" required></div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="signupPassword" placeholder="Min. 6 chars" required></div>
+                </div>
+                <button type="submit" class="btn-auth" id="signupBtn">Create Account</button>
+            </form>
+        </div>
+
+        <div class="auth-form" id="forgotForm">
+            <div id="emailSection">
+                <div class="form-group">
+                    <label>Enter Registered Email</label>
+                    <div class="input-group"><i class="fas fa-paper-plane"></i><input type="email" id="forgotEmail" placeholder="e.g. user@gmail.com"></div>
+                </div>
+                <button type="button" class="btn-auth" id="sendOtpBtn" onclick="requestOTP()">Send OTP</button>
+            </div>
+
+            <div id="otpSection">
+                <p style="text-align: center; color: #28a745; margin-bottom: 15px; font-weight: bold;">OTP sent to your email!</p>
+                <form onsubmit="resetPassword(event)">
+                    <div class="form-group">
+                        <label>Enter 6-digit OTP</label>
+                        <div class="input-group"><i class="fas fa-key"></i><input type="text" id="resetOtpCode" placeholder="XXXXXX" required></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Enter New Password</label>
+                        <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="resetNewPassword" placeholder="New Password" required></div>
+                    </div>
+                    <button type="submit" class="btn-auth" id="resetPassBtn" style="background: #28a745;">Update Password</button>
+                    <button type="button" class="btn-auth" style="background: transparent; color: #666; border: 1px solid #ccc;" onclick="switchTab('login')">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script>
+        // 🔥 POINTED TO LOCAL SERVER (ecommerce_AI database)
+        const API_URL = 'http://localhost:5000/api';
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+            document.getElementById(tab + 'Form').classList.add('active');
+            
+            // Reset OTP section agar tab switch kiya
+            if(tab === 'forgot') {
+                document.getElementById('emailSection').style.display = 'block';
+                document.getElementById('otpSection').classList.remove('active');
+                document.getElementById('forgotEmail').value = '';
+            }
+        }
+
+        function showMsg(text, type) {
+            const box = document.getElementById('messageBox');
+            box.textContent = text;
+            box.className = `message-box ${type} show`;
+            setTimeout(() => box.classList.remove('show'), 5000); 
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: document.getElementById('loginUsername').value.trim(), password: document.getElementById('loginPassword').value })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('isLoggedIn', 'true'); 
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('username', data.user.username);
+                    showMsg('✅ Login Success!', 'success'); 
+                    setTimeout(() => window.location.href = 'dashboard.html', 1000);
+                } else { showMsg('❌ ' + data.message, 'error'); }
+            } catch (err) { showMsg('❌ Server Error: Ensure node server.js is running', 'error'); }
+            btn.disabled = false;
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const btn = document.getElementById('signupBtn');
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${API_URL}/signup`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fullName: document.getElementById('signupFullName').value.trim(), 
+                        username: document.getElementById('signupUsername').value.trim(),
+                        email: document.getElementById('signupEmail').value.trim(), 
+                        password: document.getElementById('signupPassword').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) { 
+                    showMsg('✅ Account Created in Local DB! Please Login.', 'success'); 
+                    setTimeout(() => switchTab('login'), 2000); 
+                } else { 
+                    showMsg('❌ ' + data.message, 'error'); 
+                }
+            } catch (err) { showMsg('❌ Server Error: Ensure node server.js is running', 'error'); }
+            btn.disabled = false;
+        }
+
+        // ==========================================
+        // OTP REQUEST FUNCTION
+        // ==========================================
+        async function requestOTP() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            if(!email) return showMsg('❌ Please enter your email first', 'error');
+
+            const btn = document.getElementById('sendOtpBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
+            btn.disabled = true;
+            showMsg('⏳ OTP bhej rahe hain... wait karein.', 'info');
+
+            try {
+                const res = await fetch(`${API_URL}/forgot-password`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showMsg('✅ ' + data.message, 'success');
+                    document.getElementById('emailSection').style.display = 'none';
+                    document.getElementById('otpSection').classList.add('active');
+                } else { 
+                    showMsg('❌ ' + data.message, 'error'); 
+                }
+            } catch (err) { showMsg('❌ Server connection error.', 'error'); } 
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        // ==========================================
+        // RESET PASSWORD FUNCTION (Using OTP)
+        // ==========================================
+        async function resetPassword(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value.trim();
+            const otp = document.getElementById('resetOtpCode').value.trim();
+            const newPassword = document.getElementById('resetNewPassword').value;
+            
+            const btn = document.getElementById('resetPassBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/reset-password`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, otp: otp, newPassword: newPassword })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showMsg('✅ ' + data.message, 'success');
+                    document.getElementById('resetOtpCode').value = '';
+                    document.getElementById('resetNewPassword').value = '';
+                    setTimeout(() => switchTab('login'), 3000); 
+                } else { 
+                    showMsg('❌ ' + data.message, 'error'); 
+                }
+            } catch (err) { showMsg('❌ Server error.', 'error'); } 
+            finally { btn.innerHTML = 'Update Password'; btn.disabled = false; }
+        }
+    </script>
+</body>
+</html>

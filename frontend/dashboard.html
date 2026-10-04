@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Pharmacy Management</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Additional Dashboard Styles */
+        .stat-card {
+            background: wheat;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.4s ease;
+            border-left: 5px solid #667eea;
+            height: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 10px 25px rgb(239, 79, 79);
+        }
+        
+        .stat-card i {
+            font-size: 30px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card h3 {
+            font-size: 32px;
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+        
+        .stat-card p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .alert-card {
+            background: wheat;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .danger-card {
+            background: wheat;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .success-card {
+            background: wheat;
+            border-left: 5px solid #28a745;
+        }
+        
+        .info-card {
+            background: wheat;
+            border-left: 5px solid #17a2b8;
+        }
+        
+        .stock-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .stock-high { background: #4caf50; }
+        .stock-medium { background: #ff9800; }
+        .stock-low { background: #f44336; }
+        .stock-empty { background: #9e9e9e; }
+        
+        .medicine-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .medicine-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .expiry-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .expiry-soon {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .recent-activity {
+            background: wheat;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgb(233, 105, 105);
+            margin-top: 20px;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-left: 3px solid #667eea;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .activity-time {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .refresh-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #4864e4;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #764ba2;
+            transform: rotate(180deg);
+        }
+        
+        .chart-container {
+            background: wheat;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgb(258, 118, 118);
+            height: 300px;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #667eea;
+        }
+    </style>
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!isAuthenticated()) {
+            window.location.href = 'login.html';
+        } else {
+            // Show user name in dashboard
+            const user = getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName || user.username;
+            }
+        }
+    });
+</script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-prescription-bottle-alt"></i>
+                <span>PharmaCare Dashboard</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="add-medicine.html"><i class="fas fa-plus-circle"></i> Add Medicine</a></li>
+                    <li><a href="view-medicines.html"><i class="fas fa-list"></i> View Medicines</a></li>
+                    <li><a href="billing.html"><i class="fas fa-receipt"></i> Billing</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div>
+                    <p style="font-size: x-large;">Welcome <span id="userName">Admin</span> 🪢</p>
+                </div>
+                <button class="refresh-btn" onclick="refreshDashboard()" title="Refresh Dashboard">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            
+            <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="stat-card">
+                    <i class="fas fa-pills"></i>
+                    <h3 id="totalMedicines">0</h3>
+                    <p>Total Medicines</p>
+                    <small id="medicinesChange" style="color: #28a745;">Active inventory</small>
+                </div>
+                
+                <div class="stat-card success-card">
+                    <i class="fas fa-boxes"></i>
+                    <h3 id="totalStock">0</h3>
+                    <p>Total Stock Units</p>
+                    <small>Across all medicines</small>
+                </div>
+                
+                <div class="stat-card info-card">
+                    <i class="fas fa-rupee-sign"></i>
+                    <h3 id="totalStockValue">₹0</h3>
+                    <p>Total Stock Value</p>
+                    <small>Current inventory value</small>
+                </div>
+                
+                <div class="stat-card">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3 id="todaySales">0</h3>
+                    <p>Today's Sales</p>
+                    <small id="salesAmount">₹0 total</small>
+                </div>
+            </div>
+            
+            <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="stat-card danger-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3 id="expiredMedicines">0</h3>
+                    <p>Expired Medicines</p>
+                    <small>Needs attention</small>
+                    <div id="expiredList" style="margin-top: 10px; font-size: 12px;"></div>
+                </div>
+                
+                <div class="stat-card alert-card">
+                    <i class="fas fa-clock"></i>
+                    <h3 id="expiringSoon">0</h3>
+                    <p>Expiring Soon (30 days)</p>
+                    <small>Check expiry dates</small>
+                    <div id="expiringList" style="margin-top: 10px; font-size: 12px;"></div>
+                </div>
+                
+                <div class="stat-card">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3 id="lowStock">0</h3>
+                    <p>Low Stock Items</p>
+                    <small>Below 10 units</small>
+                    <div id="lowStockList" style="margin-top: 10px; font-size: 12px;"></div>
+                </div>
+                
+                <div class="stat-card success-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3 id="outOfStock">0</h3>
+                    <p>Out of Stock</p>
+                    <small>Needs restocking</small>
+                    <div id="outOfStockList" style="margin-top: 10px; font-size: 12px;"></div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 30px;">
+                <div>
+                    <div class="recent-activity">
+                        <h3><i class="fas fa-history"></i> Recent Medicines</h3>
+                        <div id="recentMedicines" class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <a href="view-medicines.html" class="btn btn-primary">
+                                <i class="fas fa-list"></i> View All Medicines
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container" style="margin-top: 30px;">
+                        <h3><i class="fas fa-chart-pie"></i> Stock Distribution</h3>
+                        <canvas id="stockChart" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="recent-activity" style="margin-bottom: 30px;">
+                        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="add-medicine.html" class="btn btn-primary" style="text-align: left;">
+                                <i class="fas fa-plus"></i> Add New Medicine
+                            </a>
+                            <a href="billing.html" class="btn btn-success" style="text-align: left;">
+                                <i class="fas fa-cash-register"></i> New Bill
+                            </a>
+                            <button onclick="printInventory()" class="btn btn-secondary" style="text-align: left;">
+                                <i class="fas fa-print"></i> Print Inventory
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-activity">
+                        <h3><i class="fas fa-bell"></i> Recent Activity</h3>
+                        <div id="activityFeed">
+                            <div class="activity-item">
+                                <strong>Dashboard loaded</strong>
+                                <p>System initialized successfully</p>
+                                <div class="activity-time">Just now</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-activity" style="margin-top: 30px;">
+                        <h3><i class="fas fa-clipboard-check"></i> Stock Status</h3>
+                        <div id="stockSummary">
+                            <p><span class="stock-indicator stock-high"></span> In Stock: <span id="inStockCount">0</span></p>
+                            <p><span class="stock-indicator stock-low"></span> Low Stock: <span id="lowStockCount">0</span></p>
+                            <p><span class="stock-indicator stock-empty"></span> Out of Stock: <span id="emptyStockCount">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recent-activity">
+                <h3><i class="fas fa-chart-bar"></i> Recent Sales</h3>
+                <div id="recentSales">
+                    <p>No recent sales data available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+    <!-- Phase 1: Smart Inventory Script Added -->
+    <script src="js/smartInventory.js"></script>
+    <script src="js/smartReorder.js"></script>
+    <script src="js/expiryRisk.js"></script>
+    <script src="js/mlForecast.js"></script>
+    <script src="js/chatbot.js"></script>
+    
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initialized');
+            if (typeof loadDashboardStats === 'function') {
+                loadDashboardStats();
+            }
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                if (typeof loadDashboardStats === 'function') {
+                    loadDashboardStats();
+                }
+            }, 30000);
+            
+            // Listen for storage events (for real-time updates)
+            window.addEventListener('storage', function(event) {
+                if (event.key === 'medicinesUpdated' && typeof loadDashboardStats === 'function') {
+                    loadDashboardStats();
+                    addActivity('Medicine inventory updated from another tab', 'info');
+                }
+            });
+        });
+        
+        // Refresh dashboard function
+        function refreshDashboard() {
+            const refreshBtn = document.querySelector('.refresh-btn i');
+            refreshBtn.classList.add('fa-spin');
+            if (typeof loadDashboardStats === 'function') {
+                loadDashboardStats();
+            }
+            setTimeout(() => {
+                refreshBtn.classList.remove('fa-spin');
+            }, 1000);
+        }
+        
+        // Print inventory
+        function printInventory() {
+            window.print();
+        }
+        
+        // Add activity to feed
+        function addActivity(message, type = 'info') {
+            const activityFeed = document.getElementById('activityFeed');
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            
+            const icon = type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-triangle' :
+                        type === 'warning' ? 'exclamation-circle' : 'info-circle';
+            
+            activityItem.innerHTML = `
+                <strong><i class="fas fa-${icon}"></i> ${message}</strong>
+                <div class="activity-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            
+            activityFeed.insertBefore(activityItem, activityFeed.firstChild);
+            
+            // Keep only last 5 activities
+            if (activityFeed.children.length > 5) {
+                activityFeed.removeChild(activityFeed.lastChild);
+            }
+        }
+    </script>
+</body>
+</html>
